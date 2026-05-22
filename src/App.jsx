@@ -1,464 +1,414 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
-import { Github, Linkedin, Mail, Phone, Download, Moon, Sun, ChevronDown, Cpu, Cloud, Database, Sparkles, Rocket } from "lucide-react";
-import { Typewriter } from "react-simple-typewriter";
+import { useState, useEffect, useRef } from "react";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 
-/** THEME **/
-const accent = "from-sky-500 via-blue-600 to-indigo-600"; // tech-blue gradient
-const glass = "backdrop-blur-md bg-white/60 dark:bg-white/5 border border-white/20";
-const card = `rounded-2xl ${glass} shadow-xl`;
+const NAV = ["About", "Experience", "Skills", "Projects", "Certifications", "Contact"];
 
-/** DATA (from resume) **/
-const profile = {
-  name: "RAVI SAI TEJA KUNA",
-  title: "Software Developer | Cloud & Full‑Stack | ML Enthusiast",
-  summary:
-    "Engineer with experience across Java full‑stack, AWS/Azure cloud, DevOps, and applied ML/CV. Passionate about secure systems, elegant UI, and shipping resilient products.",
-  location: "Potsdam, NY, USA",
-  email: "kunar@clarkson.edu",
-  phone: "315-603-8232",
-  links: {
-    github: "https://github.com/ravisaitejakuna",
-    linkedin: "https://linkedin.com/in/ravisaitejakuna/",
-    resume: "/resume.pdf", // place your PDF in public/resume.pdf
-  },
-};
-
-const skills = {
-  Languages: ["C++", "Java", "Python", "SQL"],
-  "Web Tech": ["HTML", "CSS", "React"],
-  Databases: ["MySQL", "MongoDB"],
-  OS: ["Linux"],
-  VCS: ["Git", "Jenkins"],
-  Networking: ["Wireshark", "TCP/UDP", "IP routing", "SSH"],
-  DevOps: ["Docker", "Nagios", "Ansible", "Kubernetes", "CI/CD", "YAML"],
-  Cloud: ["AWS", "Azure", "EC2", "Cloud Infra"],
-  Hardware: ["Raspberry Pi"],
-};
-
-const education = [
+const EXPERIENCE = [
   {
-    school: "Clarkson University",
-    place: "Potsdam, New York",
-    degree: "M.S. in Computer Science",
-    period: "2024 – 2026",
+    title: "Data Operations & Analyst Intern",
+    company: "Sodexo — Clarkson University",
+    location: "Potsdam, NY",
+    period: "Aug 2025 – May 2026",
+    color: "#0ea5e9",
     bullets: [
-      "Advanced Algorithms",
-      "Computer Networks",
-      "Cryptography",
-      "Fairness, Accountability & Transparency in AI",
-      "Machine Learning",
+      "Performed data entry, validation, and quality checks on 500+ inventory, post-production, workforce, and invoice records weekly using Microsoft Excel, ensuring 100% data accuracy and regulatory compliance.",
+      "Conducted post-production analysis on inventory usage, food waste, and cost trends using Excel pivot tables across 20+ weekly reporting cycles, surfacing actionable insights for management stakeholders.",
+      "Designed and delivered 15+ executive-ready KPI dashboards and performance reports using Power BI, translating raw operational data into data-driven decisions across multiple departments.",
+      "Managed end-to-end invoice processing and inventory documentation workflows for 100+ transactions per cycle using SwitchBoard Drive.",
     ],
   },
   {
-    school: "Lovely Professional University",
-    place: "Punjab, India",
-    degree: "B.Tech in Computer Science",
-    period: "2019 – 2023",
-    bullets: [],
+    title: "Research Assistant — Biometric Authentication",
+    company: "Clarkson University",
+    location: "Potsdam, NY",
+    period: "Nov 2024 – Apr 2026",
+    color: "#8b5cf6",
+    bullets: [
+      "Designed and developed a full-stack biometric authentication web application using Java and Spring Boot, exposing RESTful APIs to collect, store, and process 10,000+ keystroke coordinate samples.",
+      "Built responsive frontend interfaces using React.js, HTML5, and CSS3 to visualize biometric authentication results, integrating with Java Spring Boot backend services via RESTful API calls.",
+      "Engineered Java-based data processing modules following OOP design principles to extract, transform, and analyze 3D spatial keystroke patterns across X, Y, and Z axes.",
+      "Optimized MySQL database schemas and JDBC API queries for large-scale biometric datasets, improving data access performance across 50+ user samples.",
+    ],
+  },
+  {
+    title: "Full Stack Developer",
+    company: "Cognizant Technology Solutions",
+    location: "Hyderabad, India",
+    period: "Jan 2022 – Jun 2024",
+    color: "#10b981",
+    bullets: [
+      "Architected and delivered microservices-based full-stack enterprise applications using Java, Spring Boot, Spring MVC, and React.js with RESTful and SOAP web service integrations in Agile/Scrum environments.",
+      "Optimized SQL Server and MySQL query performance through JDBC API tuning, stored procedures, and indexing strategies, achieving 30% improvement in data retrieval efficiency.",
+      "Engineered responsive frontend UI components using React.js, HTML5, CSS3, Servlets, and JSP, improving enterprise user experience across multi-agency workflows.",
+      "Deployed cloud-ready Java EE applications on AWS EC2 with CloudWatch monitoring, ensuring 99.9% uptime, high availability, and real-time alerting.",
+      "Implemented containerized deployment pipelines using Docker, Kubernetes, and Ansible, automating infrastructure provisioning and scaling.",
+      "Integrated relational (MySQL, PostgreSQL) and NoSQL (MongoDB, Cassandra) databases to support distributed enterprise data architectures.",
+      "Automated CI/CD workflows using Jenkins and Git, resolving production and QA defects within Jira-tracked Agile sprints.",
+    ],
+  },
+  {
+    title: "Data Science Intern",
+    company: "UpGrad",
+    location: "Remote, India",
+    period: "Jun 2021 – Aug 2021",
+    color: "#f59e0b",
+    bullets: [
+      "Analyzed financial market data for 6 companies using MySQL ETL pipelines, building structured datasets for time series forecasting and investment strategy modeling.",
+      "Applied moving average and trend decomposition techniques in Python to generate buy/sell/hold recommendations for financial decision-making.",
+      "Engineered and optimized MySQL queries using UDFs and stored procedures, automating data retrieval workflows and reducing manual processing effort.",
+    ],
   },
 ];
 
-const experience = [
+const SKILLS = [
+  { category: "Languages", icon: "💻", items: ["Java", "Python", "SQL", "C# (Basic)", "MATLAB"] },
+  { category: "Frameworks", icon: "⚙️", items: ["Spring Boot", "Spring MVC", "React.js", "TensorFlow", "Pandas", "NumPy"] },
+  { category: "Web", icon: "🌐", items: ["HTML5", "CSS3", "REST APIs", "SOAP", "Servlets", "JSP"] },
+  { category: "Databases", icon: "🗄️", items: ["MySQL", "PostgreSQL", "MongoDB", "Cassandra", "SQL Server", "Oracle"] },
+  { category: "Cloud & DevOps", icon: "☁️", items: ["AWS EC2", "Lambda", "CloudWatch", "Docker", "Kubernetes", "Jenkins", "Ansible"] },
+  { category: "Data & BI", icon: "📊", items: ["Power BI", "Matplotlib", "Excel", "ETL", "Tableau", "ArcGIS Pro"] },
+  { category: "Tools", icon: "🛠️", items: ["Git", "GitHub", "Jira", "Linux", "Jupyter", "Wireshark"] },
+  { category: "Hardware & IoT", icon: "🤖", items: ["Raspberry Pi", "Jetson Nano", "OpenCV", "PyTorch", "YOLOv8"] },
+];
+
+const PROJECTS = [
   {
-    role: "Research Assistant",
-    org: "Clarkson University",
-    period: "Jan 2025 – Apr 2025",
+    title: "JetAuto Camera-Based Obstacle Detection",
+    type: "Robotics & Computer Vision",
+    period: "Nov 2025 – Feb 2026",
+    tech: ["Python", "YOLOv5", "YOLOv8", "PyTorch", "OpenCV", "Jetson Nano", "Linux"],
+    color: "#8b5cf6",
+    icon: "🤖",
     bullets: [
-      "Designed a custom 3D plane‑distance formula for keystroke dynamics weight calculations.",
-      "Enhanced authentication accuracy via 3D keystroke pattern analysis for biometric security.",
-      "Implemented the method to increase precision of user identification systems.",
+      "Deployed YOLOv5 on a Jetson Nano-powered JetAuto robot using PyTorch and OpenCV, implementing real-time bounding box detection integrated with autonomous motion control logic.",
+      "Engineered and benchmarked YOLOv8 anchor-free detection pipelines via the Ultralytics API, achieving faster inference speeds on external GPU systems.",
+      "Architected a hybrid camera streaming pipeline offloading YOLOv8 inference from Jetson Nano to external systems, resolving WiFi latency as the critical bottleneck.",
     ],
   },
   {
-    role: "Java Full‑Stack Engineer",
-    org: "Cognizant Technology Solutions, Chennai, India",
+    title: "CarRental Management Application",
+    type: "Full Stack",
     period: "Jan 2023 – Jun 2023",
+    tech: ["Java", "Spring Boot", "React.js", "SQL Server", "JDBC API", "HTML5", "CSS3"],
+    color: "#10b981",
+    icon: "🚗",
     bullets: [
-      "Shipped a resilient CarRental application on a Java stack for multi‑agency rental operations.",
-      "Optimized workflows and improved operational efficiency with scalable backend services.",
-      "Integrated SQL Server + JDBC; boosted data retrieval performance by ~30%.",
+      "Architected a full-stack multi-agency CarRental platform using Java/Spring Boot backend and React.js frontend, delivering a scalable rental management system with complex transactional operations.",
+      "Integrated SQL Server via JDBC API with optimized query execution and connection pooling, improving data retrieval efficiency by 30% across client-facing workflows.",
+      "Developed RESTful backend logic and dynamic React.js/HTML5/CSS3 UI components, enabling seamless multi-agency workflows.",
     ],
   },
 ];
 
-const projects = [
-  {
-    title: "Human Emotion Detection — Computer Vision",
-    period: "Oct 2024 – Dec 2024",
-    tags: ["Python", "Ultralytics YOLOv8n", "OpenCV", "TensorFlow", "NLP"],
-    bullets: [
-      "Real‑time emotion detection pipeline (acquisition → preprocessing → features → recognition).",
-      "Trained on 270 annotated images (640×640, 5 classes) via Roboflow; used YOLOv8n for speed/accuracy balance.",
-    ],
-  },
-  {
-    title: "Raspberry Pi‑Based Network Monitoring System",
-    period: "Jun 2022 – Aug 2022",
-    tags: ["Raspberry Pi", "Python", "Wireshark", "Linux", "SSH"],
-    bullets: [
-      "Built real‑time traffic analysis and anomaly detection with packet capture + logging.",
-      "Automated scans & generated bandwidth/active‑connection reports; flagged suspicious IPs.",
-    ],
-  },
-  {
-    title: "Data Science Intern — Stock Analysis",
-    period: "Jun 2021 – Jul 2021",
-    tags: ["MySQL", "ETL", "Time Series", "Trend Decomposition"],
-    bullets: [
-      "Analyzed multi‑company stock datasets to inform buy/sell/hold strategies.",
-      "Applied moving averages & decomposition to forecast performance and guide decisions.",
-    ],
-  },
+const CERTS = [
+  { name: "Machine Learning Specialization", issuer: "Coursera — Stanford / DeepLearning.AI", icon: "🎓" },
+  { name: "KNIME Analytics Platform", issuer: "KNIME AG — Data Science with KNIME, Apr 2025", icon: "📊" },
+  { name: "Coders Combat", issuer: "GeeksforGeeks — Competitive Programming Contest", icon: "🏆" },
 ];
 
-const certs = [
-  { name: "Machine Learning — Coursera", when: "Nov 2022" },
-  { name: "Coders Combat — GeeksforGeeks", when: "Jun 2022" },
-  { name: "Basics of Data Science — UpGrad", when: "Jun 2021" },
-  { name: "Agriculture & Horticulture Plantation (NGO) — VMM", when: "Jul 2020" },
-];
-
-/** UTIL: Typewriter hook **/
-function useTypewriter(text, speed = 75, delay = 350) {
-  const [output, setOutput] = useState("");
-  useEffect(() => {
-    let i = 0;
-    const startTimer = setTimeout(() => {
-      const id = setInterval(() => {
-        setOutput((prev) => (i < text.length ? prev + text[i++] : prev));
-        if (i >= text.length) clearInterval(id);
-      }, speed);
-    }, delay);
-    return () => clearTimeout(startTimer);
-  }, [text, speed, delay]);
-  return output;
-}
-
-/** Dark mode toggle **/
-function useDarkMode() {
-  const [dark, setDark] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("theme") === "dark" : false
-  );
-  useEffect(() => {
-    const root = document.documentElement;
-    if (dark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
-  return { dark, setDark };
-}
-
-const fade = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-};
-
-function Section({ id, title, icon, children }) {
+function FadeIn({ children, delay = 0, className = "" }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
   return (
-    <section id={id} className="scroll-mt-24 py-20">
-      <motion.div
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={fade}
-        className={`max-w-6xl mx-auto px-4 ${card} p-8`}
-      >
-        <div className="flex items-center gap-3 mb-6">
-          {icon}
-          <h2 className="text-2xl md:text-3xl font-semibold tracking-tight">{title}</h2>
-        </div>
-        {children}
-      </motion.div>
-    </section>
-  );
-}
-
-function Chip({ children }) {
-  return (
-    <span className="text-xs md:text-sm px-3 py-1 rounded-full border border-white/30 bg-white/10 dark:bg-white/5">
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 32 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
       {children}
-    </span>
+    </motion.div>
   );
 }
 
 export default function App() {
-  const { dark, setDark } = useDarkMode();
-  const typedName = useTypewriter("Hi, I'm Ravi Sai Teja Kuna");
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 20 });
-
-  const hue = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const [active, setActive] = useState("About");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState(true);
+  const [expandedExp, setExpandedExp] = useState(null);
+  const [expandedProj, setExpandedProj] = useState(null);
 
   useEffect(() => {
-    const handler = (e) => {
-      const a = e.target.closest('a[href^="#"]');
-      if (!a) return;
-      const id = a.getAttribute("href").slice(1);
-      const el = document.getElementById(id);
-      if (el) {
-        e.preventDefault();
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        history.replaceState(null, "", `#${id}`);
-      }
-    };
-    document.addEventListener("click", handler);
-    return () => document.removeEventListener("click", handler);
-  }, []);
+    document.documentElement.classList.toggle("dark", dark);
+  }, [dark]);
+
+  const scrollTo = (id) => {
+    document.getElementById(id.toLowerCase())?.scrollIntoView({ behavior: "smooth" });
+    setActive(id);
+    setMenuOpen(false);
+  };
 
   return (
-    <div className="min-h-screen text-slate-900 dark:text-slate-100 bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-950 dark:to-slate-900">
-      {/* Top progress */}
-      <motion.div style={{ scaleX }} className={`fixed top-0 left-0 right-0 h-1 origin-left bg-gradient-to-r ${accent} z-50`} />
-
-      {/* Aurora */}
-      <motion.div aria-hidden className="pointer-events-none fixed inset-0 -z-10" style={{ filter: "blur(64px)" }}>
-        <motion.div style={{ rotate: hue }} className="absolute -top-40 -left-40 w-[50vw] h-[50vw] rounded-full opacity-40 bg-gradient-to-tr from-sky-400 via-blue-400 to-indigo-400" />
-        <motion.div style={{ rotate: hue }} className="absolute -bottom-40 -right-40 w-[50vw] h-[50vw] rounded-full opacity-30 bg-gradient-to-tr from-indigo-400 via-cyan-400 to-emerald-400" />
-      </motion.div>
+    <div className={`min-h-screen font-sans transition-colors duration-300 ${dark ? "bg-[#0a0f1e] text-white" : "bg-gray-50 text-gray-900"}`}>
 
       {/* NAV */}
-      <nav className={`sticky top-0 z-40 ${glass} py-3`}>
-        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between">
-          <a href="#home" className="font-bold tracking-tight">Ravi.dev</a>
-          <div className="flex items-center gap-4 text-sm">
-            <a href="#skills">Skills</a>
-            <a href="#experience">Experience</a>
-            <a href="#projects">Projects</a>
-            <a href="#education">Education</a>
-            <a href="#certs">Certifications</a>
-            <a href="#contact">Contact</a>
-            <button
-              aria-label="Toggle dark mode"
-              onClick={() => setDark(!dark)}
-              className="ml-2 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/20 bg-white/10 dark:bg-white/5"
-            >
-              {dark ? <Sun size={16} /> : <Moon size={16} />}
-              <span className="hidden md:inline">{dark ? "Light" : "Dark"}</span>
+      <nav className={`fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-md ${dark ? "bg-[#0a0f1e]/90 border-white/10" : "bg-white/90 border-gray-200"}`}>
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <span className="font-bold text-lg bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">RST</span>
+          <div className="hidden md:flex items-center gap-1">
+            {NAV.map((n) => (
+              <button key={n} onClick={() => scrollTo(n)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${active === n ? "bg-blue-500/20 text-blue-400" : dark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"}`}>
+                {n}
+              </button>
+            ))}
+            <button onClick={() => setDark(!dark)} className={`ml-2 p-2 rounded-lg transition-all ${dark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-600"}`}>
+              {dark ? "☀️" : "🌙"}
             </button>
           </div>
+          <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>☰</button>
         </div>
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden md:hidden border-t border-white/10">
+              {NAV.map((n) => (
+                <button key={n} onClick={() => scrollTo(n)} className="block w-full text-left px-6 py-3 text-sm hover:bg-white/5">{n}</button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* HERO */}
-      <header id="home" className="max-w-6xl mx-auto px-4 pt-16 pb-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0, transition: { duration: 0.7 } }} className="grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <p className="text-sm uppercase tracking-wider opacity-70">Available for internships & full‑time roles</p>
-            <h1 className="mt-2 text-4xl md:text-6xl font-extrabold leading-tight">
-              <Typewriter
-  words={["Hi, I'm Ravi Sai Teja Kuna"]}
-  loop={false}
-  cursor
-  cursorStyle="▮"
-  typeSpeed={60}
-  deleteSpeed={50}
-  delaySpeed={1000}
-/>
-
-              <span className="animate-pulse">▮</span>
-            </h1>
-            <p className="mt-2 text-lg opacity-90">{profile.title}</p>
-            <p className="mt-4 opacity-80">{profile.summary}</p>
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a href={profile.links.linkedin} target="_blank" className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${glass}`}>
-                <Linkedin size={18} /> LinkedIn
-              </a>
-              <a href={profile.links.github} target="_blank" className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${glass}`}>
-                <Github size={18} /> GitHub
-              </a>
-              <a href={`mailto:${profile.email}`} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${glass}`}>
-                <Mail size={18} /> Email
-              </a>
-              <a href={profile.links.resume} className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl ${glass}`}>
-                <Download size={18} /> Resume
-              </a>
-            </div>
-
-            <div className="mt-6 text-sm opacity-80 flex flex-wrap gap-4">
-              <span className="inline-flex items-center gap-2"><Phone size={16} /> {profile.phone}</span>
-              <span>{profile.location}</span>
-            </div>
-          </div>
-
-          {/* Floating cards */}
-          <div className="relative h-72 md:h-96">
-            <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.8 }} className={`absolute right-4 top-4 p-4 ${card}`}>
-              <div className="flex items-center gap-2">
-                <Cpu className="opacity-80" /> <span>Algorithms</span>
-              </div>
-              <p className="mt-2 text-sm opacity-80">Advanced Algorithms, Cryptography</p>
-            </motion.div>
-            <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: -10, opacity: 1 }} transition={{ duration: 1, delay: 0.15 }} className={`absolute left-0 bottom-6 p-4 ${card}`}>
-              <div className="flex items-center gap-2">
-                <Cloud className="opacity-80" /> <span>Cloud + DevOps</span>
-              </div>
-              <p className="mt-2 text-sm opacity-80">AWS, Azure, Docker, K8s, CI/CD</p>
-            </motion.div>
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 1.1, delay: 0.3 }} className={`absolute right-10 bottom-2 p-4 ${card}`}>
-              <div className="flex items-center gap-2">
-                <Database className="opacity-80" /> <span>Data</span>
-              </div>
-              <p className="mt-2 text-sm opacity-80">MySQL, MongoDB, Time Series</p>
-            </motion.div>
-          </div>
-        </motion.div>
-
-        <div className="mt-12 flex justify-center">
-          <a href="#skills" className="inline-flex items-center gap-2 opacity-80 hover:opacity-100">
-            <ChevronDown /> Explore my work
-          </a>
+      <section id="about" className="min-h-screen flex items-center justify-center relative overflow-hidden pt-16">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
         </div>
-      </header>
-
-      {/* SKILLS */}
-      <Section id="skills" title="Technical Skills" icon={<Sparkles className="opacity-80" />}>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.entries(skills).map(([k, arr]) => (
-            <motion.div key={k} whileHover={{ y: -4 }} className={`p-5 rounded-xl ${glass}`}>
-              <p className="text-sm uppercase tracking-wider opacity-70 mb-2">{k}</p>
-              <div className="flex flex-wrap gap-2">
-                {arr.map((s) => (
-                  <Chip key={s}>{s}</Chip>
-                ))}
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-sm font-medium mb-8">
+              <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+              Available for opportunities
+            </div>
+          </motion.div>
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-5xl md:text-7xl font-bold mb-4 leading-tight">
+            Ravi Sai Teja{" "}
+            <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-cyan-400 bg-clip-text text-transparent">Kuna</span>
+          </motion.h1>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}
+            className={`text-xl md:text-2xl font-medium mb-6 ${dark ? "text-gray-300" : "text-gray-600"}`}>
+            Full Stack Developer & Data Analyst
+          </motion.p>
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
+            className={`text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed ${dark ? "text-gray-400" : "text-gray-500"}`}>
+            4+ years building scalable enterprise applications with Java, Spring Boot, React.js, and AWS.
+            MS Computer Science @ Clarkson University. Based in NY, USA.
+          </motion.p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+            className="flex flex-wrap items-center justify-center gap-4">
+            <a href="mailto:kunaravisaiteja@gmail.com"
+              className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-medium hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-blue-500/25">
+              Get in touch
+            </a>
+            <a href="https://linkedin.com/in/ravisaitejakuna" target="_blank" rel="noreferrer"
+              className={`px-6 py-3 rounded-xl border font-medium transition-all hover:scale-105 ${dark ? "border-white/20 text-gray-300 hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}>
+              LinkedIn ↗
+            </a>
+            <a href="https://github.com/ravisaitejakuna" target="_blank" rel="noreferrer"
+              className={`px-6 py-3 rounded-xl border font-medium transition-all hover:scale-105 ${dark ? "border-white/20 text-gray-300 hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}>
+              GitHub ↗
+            </a>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55 }}
+            className="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
+            {[["4+", "Years Experience"], ["30%", "Performance Gains"], ["99.9%", "System Uptime"]].map(([val, label]) => (
+              <div key={label} className={`text-center p-4 rounded-xl border ${dark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"}`}>
+                <div className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">{val}</div>
+                <div className={`text-xs mt-1 ${dark ? "text-gray-500" : "text-gray-500"}`}>{label}</div>
               </div>
-            </motion.div>
-          ))}
+            ))}
+          </motion.div>
         </div>
-      </Section>
+      </section>
 
       {/* EXPERIENCE */}
-      <Section id="experience" title="Experience" icon={<Rocket className="opacity-80" />}>
-        <div className="space-y-6">
-          {experience.map((e) => (
-            <motion.div key={e.role} whileHover={{ scale: 1.01 }} className={`p-6 rounded-xl ${glass}`}>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                <div>
-                  <h3 className="text-xl font-semibold">{e.role}</h3>
-                  <p className="opacity-80">{e.org}</p>
-                </div>
-                <p className="text-sm opacity-70">{e.period}</p>
-              </div>
-              <ul className="mt-3 list-disc list-inside space-y-1 opacity-90">
-                {e.bullets.map((b, i) => (
-                  <li key={i}>{b}</li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* PROJECTS */}
-      <Section id="projects" title="Projects" icon={<Sparkles className="opacity-80" />}>
-        <div className="grid md:grid-cols-2 gap-6">
-          {projects.map((p) => (
-            <motion.article key={p.title} whileHover={{ y: -6 }} className={`p-6 rounded-2xl ${glass} shadow-lg`}>
-              <div className="flex items-center justify-between gap-2">
-                <h3 className="text-lg font-semibold">{p.title}</h3>
-                <span className="text-xs opacity-70">{p.period}</span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {p.tags.map((t) => (
-                  <Chip key={t}>{t}</Chip>
-                ))}
-              </div>
-              <ul className="mt-3 list-disc list-inside space-y-1 opacity-90">
-                {p.bullets.map((b, i) => (
-                  <li key={i}>{b}</li>
-                ))}
-              </ul>
-            </motion.article>
-          ))}
-        </div>
-      </Section>
-
-      {/* EDUCATION */}
-      <Section id="education" title="Education" icon={<Sparkles className="opacity-80" />}>
-        <div className="grid md:grid-cols-2 gap-6">
-          {education.map((ed) => (
-            <motion.div key={ed.school} whileHover={{ scale: 1.01 }} className={`p-6 rounded-xl ${glass}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold">{ed.school}</h3>
-                  <p className="opacity-80">{ed.degree}</p>
-                </div>
-                <span className="text-sm opacity-70">{ed.period}</span>
-              </div>
-              {ed.place && <p className="mt-1 text-sm opacity-70">{ed.place}</p>}
-              {ed.bullets?.length > 0 && (
-                <ul className="mt-3 list-disc list-inside space-y-1 opacity-90">
-                  {ed.bullets.map((b, i) => (
-                    <li key={i}>{b}</li>
-                  ))}
-                </ul>
-              )}
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CERTS */}
-      <Section id="certs" title="Certifications" icon={<Sparkles className="opacity-80" />}>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {certs.map((c) => (
-            <motion.div key={c.name} whileHover={{ y: -4 }} className={`p-4 rounded-xl ${glass}`}>
-              <p className="font-medium">{c.name}</p>
-              <p className="text-sm opacity-70">{c.when}</p>
-            </motion.div>
-          ))}
-        </div>
-      </Section>
-
-      {/* CONTACT */}
-      <Section id="contact" title="Get in touch" icon={<Mail className="opacity-80" />}>
-        <div className="grid md:grid-cols-2 gap-6 items-start">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const form = e.currentTarget;
-              const data = Object.fromEntries(new FormData(form).entries());
-              const subject = encodeURIComponent(`Portfolio message from ${data.name}`);
-              const body = encodeURIComponent(`${data.message}\n\nFrom: ${data.name} <${data.email}>`);
-              window.location.href = `mailto:${profile.email}?subject=${subject}&body=${body}`;
-            }}
-            className={`p-6 rounded-xl ${glass} space-y-3`}
-          >
-            <div>
-              <label className="text-sm opacity-70">Name</label>
-              <input name="name" required className="w-full mt-1 px-3 py-2 rounded-lg bg-transparent border border-white/30 focus:outline-none" />
-            </div>
-            <div>
-              <label className="text-sm opacity-70">Email</label>
-              <input type="email" name="email" required className="w-full mt-1 px-3 py-2 rounded-lg bg-transparent border border-white/30 focus:outline-none" />
-            </div>
-            <div>
-              <label className="text-sm opacity-70">Message</label>
-              <textarea name="message" rows={5} required className="w-full mt-1 px-3 py-2 rounded-lg bg-transparent border border-white/30 focus:outline-none" />
-            </div>
-            <button className={`px-4 py-2 rounded-xl bg-gradient-to-r ${accent} text-white font-semibold`}>Send</button>
-          </form>
-
-          <div className={`p-6 rounded-xl ${glass}`}>
-            <p className="opacity-80">Prefer email or a quick call?</p>
-            <div className="mt-3 space-y-2 text-sm">
-              <div className="flex items-center gap-2"><Mail size={16}/> <a href={`mailto:${profile.email}`}>{profile.email}</a></div>
-              <div className="flex items-center gap-2"><Phone size={16}/> <a href={`tel:${profile.phone}`}>{profile.phone}</a></div>
-              <div className="flex items-center gap-2"><Linkedin size={16}/> <a target="_blank" href={profile.links.linkedin}>LinkedIn</a></div>
-              <div className="flex items-center gap-2"><Github size={16}/> <a target="_blank" href={profile.links.github}>GitHub</a></div>
+      <section id="experience" className={`py-24 ${dark ? "" : "bg-white"}`}>
+        <div className="max-w-4xl mx-auto px-6">
+          <FadeIn>
+            <h2 className="text-3xl font-bold mb-2">Experience</h2>
+            <p className={`mb-12 ${dark ? "text-gray-400" : "text-gray-500"}`}>My professional journey</p>
+          </FadeIn>
+          <div className="relative">
+            <div className={`absolute left-6 top-0 bottom-0 w-px ${dark ? "bg-white/10" : "bg-gray-200"}`} />
+            <div className="space-y-6">
+              {EXPERIENCE.map((exp, i) => (
+                <FadeIn key={i} delay={i * 0.08}>
+                  <div className={`relative ml-16 rounded-2xl border transition-all cursor-pointer ${dark ? "border-white/10 bg-white/5 hover:bg-white/[0.08]" : "border-gray-200 bg-white hover:shadow-md"}`}
+                    onClick={() => setExpandedExp(expandedExp === i ? null : i)}>
+                    <div className="absolute -left-10 top-6 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                      style={{ borderColor: exp.color, background: dark ? "#0a0f1e" : "#fff" }}>
+                      <div className="w-2 h-2 rounded-full" style={{ background: exp.color }} />
+                    </div>
+                    <div className="p-6">
+                      <div className="flex flex-wrap items-start justify-between gap-2 mb-1">
+                        <h3 className="font-semibold text-lg">{exp.title}</h3>
+                        <span className={`text-sm ${dark ? "text-gray-400" : "text-gray-500"}`}>{exp.period}</span>
+                      </div>
+                      <p style={{ color: exp.color }} className="text-sm font-medium mb-4">{exp.company} · {exp.location}</p>
+                      <AnimatePresence>
+                        {expandedExp === i && (
+                          <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }} className="space-y-2 overflow-hidden">
+                            {exp.bullets.map((b, j) => (
+                              <li key={j} className={`flex gap-2 text-sm leading-relaxed ${dark ? "text-gray-300" : "text-gray-600"}`}>
+                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: exp.color }} />
+                                {b}
+                              </li>
+                            ))}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                      <div className={`mt-3 text-xs ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                        {expandedExp === i ? "▲ Show less" : "▼ Show details"}
+                      </div>
+                    </div>
+                  </div>
+                </FadeIn>
+              ))}
             </div>
           </div>
         </div>
-      </Section>
+      </section>
+
+      {/* SKILLS */}
+      <section id="skills" className={`py-24 ${dark ? "bg-white/[0.02]" : "bg-gray-50"}`}>
+        <div className="max-w-4xl mx-auto px-6">
+          <FadeIn>
+            <h2 className="text-3xl font-bold mb-2">Skills</h2>
+            <p className={`mb-12 ${dark ? "text-gray-400" : "text-gray-500"}`}>Technologies and tools I work with</p>
+          </FadeIn>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {SKILLS.map((s, i) => (
+              <FadeIn key={i} delay={i * 0.05}>
+                <div className={`p-5 rounded-2xl border ${dark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"}`}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-xl">{s.icon}</span>
+                    <h3 className="font-semibold text-sm">{s.category}</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {s.items.map((item) => (
+                      <span key={item} className={`text-xs px-3 py-1 rounded-full border ${dark ? "border-white/15 bg-white/8 text-gray-300" : "border-gray-200 bg-gray-50 text-gray-700"}`}>
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECTS */}
+      <section id="projects" className={`py-24 ${dark ? "" : "bg-white"}`}>
+        <div className="max-w-4xl mx-auto px-6">
+          <FadeIn>
+            <h2 className="text-3xl font-bold mb-2">Projects</h2>
+            <p className={`mb-12 ${dark ? "text-gray-400" : "text-gray-500"}`}>Things I've built</p>
+          </FadeIn>
+          <div className="grid md:grid-cols-2 gap-6">
+            {PROJECTS.map((p, i) => (
+              <FadeIn key={i} delay={i * 0.1}>
+                <div className={`rounded-2xl border overflow-hidden transition-all cursor-pointer hover:scale-[1.01] ${dark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white hover:shadow-lg"}`}
+                  onClick={() => setExpandedProj(expandedProj === i ? null : i)}>
+                  <div className="h-1.5 w-full" style={{ background: `linear-gradient(90deg, ${p.color}, transparent)` }} />
+                  <div className="p-6">
+                    <div className="flex items-start gap-3 mb-3">
+                      <span className="text-3xl">{p.icon}</span>
+                      <div>
+                        <h3 className="font-semibold text-base leading-tight">{p.title}</h3>
+                        <p className="text-xs mt-0.5" style={{ color: p.color }}>{p.type} · {p.period}</p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {p.tech.map((t) => (
+                        <span key={t} className={`text-xs px-2.5 py-0.5 rounded-full border ${dark ? "border-white/15 text-gray-400" : "border-gray-200 text-gray-600"}`}>{t}</span>
+                      ))}
+                    </div>
+                    <AnimatePresence>
+                      {expandedProj === i && (
+                        <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }} className="space-y-2 overflow-hidden">
+                          {p.bullets.map((b, j) => (
+                            <li key={j} className={`flex gap-2 text-sm leading-relaxed ${dark ? "text-gray-300" : "text-gray-600"}`}>
+                              <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: p.color }} />
+                              {b}
+                            </li>
+                          ))}
+                        </motion.ul>
+                      )}
+                    </AnimatePresence>
+                    <div className={`mt-3 text-xs ${dark ? "text-gray-500" : "text-gray-400"}`}>
+                      {expandedProj === i ? "▲ Show less" : "▼ View details"}
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CERTIFICATIONS */}
+      <section id="certifications" className={`py-24 ${dark ? "bg-white/[0.02]" : "bg-gray-50"}`}>
+        <div className="max-w-4xl mx-auto px-6">
+          <FadeIn>
+            <h2 className="text-3xl font-bold mb-2">Certifications</h2>
+            <p className={`mb-12 ${dark ? "text-gray-400" : "text-gray-500"}`}>Credentials and achievements</p>
+          </FadeIn>
+          <div className="grid md:grid-cols-3 gap-4">
+            {CERTS.map((c, i) => (
+              <FadeIn key={i} delay={i * 0.1}>
+                <div className={`p-5 rounded-2xl border text-center ${dark ? "border-white/10 bg-white/5" : "border-gray-200 bg-white"}`}>
+                  <div className="text-3xl mb-3">{c.icon}</div>
+                  <h3 className="font-semibold text-sm mb-1">{c.name}</h3>
+                  <p className={`text-xs ${dark ? "text-gray-400" : "text-gray-500"}`}>{c.issuer}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CONTACT */}
+      <section id="contact" className={`py-24 ${dark ? "" : "bg-white"}`}>
+        <div className="max-w-2xl mx-auto px-6 text-center">
+          <FadeIn>
+            <h2 className="text-3xl font-bold mb-4">Let's Connect</h2>
+            <p className={`text-lg mb-10 ${dark ? "text-gray-400" : "text-gray-500"}`}>
+              Open to Full Stack Developer and Data Analyst roles. Let's build something great together.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 mb-10">
+              <a href="mailto:kunaravisaiteja@gmail.com"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white font-medium hover:opacity-90 transition-all hover:scale-105 shadow-lg shadow-blue-500/25">
+                kunaravisaiteja@gmail.com
+              </a>
+              <a href="tel:3156038232"
+                className={`px-6 py-3 rounded-xl border font-medium transition-all hover:scale-105 ${dark ? "border-white/20 text-gray-300 hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}>
+                315-603-8232
+              </a>
+            </div>
+            <div className="flex justify-center gap-4">
+              {[
+                { label: "LinkedIn", url: "https://linkedin.com/in/ravisaitejakuna" },
+                { label: "GitHub", url: "https://github.com/ravisaitejakuna" },
+              ].map((l) => (
+                <a key={l.label} href={l.url} target="_blank" rel="noreferrer"
+                  className={`px-5 py-2.5 rounded-xl border text-sm font-medium transition-all hover:scale-105 ${dark ? "border-white/15 text-gray-300 hover:bg-white/10" : "border-gray-200 text-gray-600 hover:bg-gray-50"}`}>
+                  {l.label} ↗
+                </a>
+              ))}
+            </div>
+          </FadeIn>
+        </div>
+      </section>
 
       {/* FOOTER */}
-      <footer className="py-10 text-center opacity-70">
-        <p>© {new Date().getFullYear()} {profile.name}. Built with React + Tailwind + Framer Motion.</p>
+      <footer className={`py-8 border-t text-center text-sm ${dark ? "border-white/10 text-gray-500" : "border-gray-200 text-gray-400"}`}>
+        <p>Ravi Sai Teja Kuna · NY, USA · Built with React & Tailwind</p>
       </footer>
     </div>
   );
